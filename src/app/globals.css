@@ -3,11 +3,23 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --yellow-primary: #FFEB3B;
+  --yellow-secondary: #FFC107;
+  --yellow-dark: #F57F17;
+  --gray-dark: #0a0a0a;
+  --gray-medium: #1a1a1a;
+  --gray-light: #2a2a2a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-yellow-primary: var(--yellow-primary);
+  --color-yellow-secondary: var(--yellow-secondary);
+  --color-yellow-dark: var(--yellow-dark);
+  --color-gray-dark: var(--gray-dark);
+  --color-gray-medium: var(--gray-medium);
+  --color-gray-light: var(--gray-light);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -19,8 +31,50 @@
   }
 }
 
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-medium);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--yellow-primary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--yellow-secondary);
+}
+
+/* Glowing effect for accent elements */
+.glow-yellow {
+  box-shadow: 0 0 20px rgba(255, 235, 59, 0.3);
+}
+
+/* Animation utilities */
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom gradient backgrounds */
+.gradient-yellow {
+  background: linear-gradient(135deg, var(--yellow-primary), var(--yellow-secondary));
+}
+
+.gradient-gray {
+  background: linear-gradient(135deg, var(--gray-medium), var(--gray-light));
 }
