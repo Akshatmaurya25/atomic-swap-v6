@@ -55,7 +55,7 @@ export function useAuth() {
 // Generic hook for Supabase operations
 export function useSupabaseQuery<T>(
   queryFn: () => Promise<{ success: boolean; data?: T; error?: string }>,
-  dependencies: any[] = []
+  dependencies: unknown[] = []
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +79,7 @@ export function useSupabaseQuery<T>(
     } finally {
       setLoading(false);
     }
-  }, dependencies);
+  }, [queryFn, ...dependencies]);
 
   useEffect(() => {
     fetchData();

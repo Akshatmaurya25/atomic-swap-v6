@@ -5,7 +5,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useAccount, useBalance } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useToast } from '@/components/ui/Toast';
 import { 
   PieChart, 
   Pie, 
@@ -32,9 +33,6 @@ import {
   Plus,
   Send,
   ArrowUpRight,
-  ArrowDownRight,
-  AlertTriangle,
-  Zap,
   Shield,
   Target
 } from 'lucide-react';
@@ -209,11 +207,20 @@ const performanceHistory = [
 ];
 
 export default function PortfolioPage() {
-  const { address } = useAccount();
+  const { } = useAccount();
   const [wallets] = useState<WalletData[]>(mockWallets);
   const [hideBalances, setHideBalances] = useState(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState('7d');
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const { showDevelopmentToast } = useToast();
+
+  // Show development toast when page loads
+  useEffect(() => {
+    showDevelopmentToast(
+      '💼 Portfolio Management - In Development',
+      'Advanced Yellow Network portfolio tracking is coming soon! This preview shows multi-chain asset management with real DeFi integration.'
+    );
+  }, [showDevelopmentToast]);
 
   const calculateMetrics = (): PortfolioMetrics => {
     const totalValue = wallets.reduce((sum, wallet) => sum + wallet.totalValue, 0);
@@ -507,7 +514,7 @@ export default function PortfolioPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {wallets.map((wallet, index) => (
+              {wallets.map((wallet) => (
                 <div 
                   key={wallet.address}
                   className="p-4 border border-gray-700 rounded-lg hover:border-yellow-400/50 transition-colors cursor-pointer"

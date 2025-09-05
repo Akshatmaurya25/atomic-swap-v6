@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/Badge';
 import { 
   Activity,
   Search,
-  Filter,
   Download,
   ExternalLink,
   Clock,
@@ -20,11 +19,9 @@ import {
   ArrowLeftRight,
   Wallet,
   Bot,
-  Settings,
   Play,
   Pause,
-  RefreshCw,
-  Calendar
+  RefreshCw
 } from 'lucide-react';
 import { cn, formatCurrency, formatPercentage, timeAgo, truncateAddress } from '@/lib/utils';
 

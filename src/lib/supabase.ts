@@ -35,8 +35,22 @@ export interface Database {
           status: 'active' | 'paused' | 'stopped';
           pairs: string[];
           chains: string[];
-          settings: any;
-          performance: any;
+          settings: {
+            minProfitPercentage: number;
+            maxInvestment: number;
+            stopLoss: number;
+            slippage?: number;
+            gasLimit?: 'auto' | 'manual';
+            customGasLimit?: number;
+            tradingFunds?: number;
+          };
+          performance: {
+            totalProfit: number;
+            profitPercentage: number;
+            trades: number;
+            successRate: number;
+            balance: number;
+          };
           created_at: string;
           updated_at: string;
         };
@@ -48,8 +62,22 @@ export interface Database {
           status?: 'active' | 'paused' | 'stopped';
           pairs: string[];
           chains: string[];
-          settings: any;
-          performance?: any;
+          settings: {
+            minProfitPercentage: number;
+            maxInvestment: number;
+            stopLoss: number;
+            slippage?: number;
+            gasLimit?: 'auto' | 'manual';
+            customGasLimit?: number;
+            tradingFunds?: number;
+          };
+          performance?: {
+            totalProfit: number;
+            profitPercentage: number;
+            trades: number;
+            successRate: number;
+            balance: number;
+          };
           created_at?: string;
           updated_at?: string;
         };
@@ -61,8 +89,22 @@ export interface Database {
           status?: 'active' | 'paused' | 'stopped';
           pairs?: string[];
           chains?: string[];
-          settings?: any;
-          performance?: any;
+          settings?: {
+            minProfitPercentage?: number;
+            maxInvestment?: number;
+            stopLoss?: number;
+            slippage?: number;
+            gasLimit?: 'auto' | 'manual';
+            customGasLimit?: number;
+            tradingFunds?: number;
+          };
+          performance?: {
+            totalProfit?: number;
+            profitPercentage?: number;
+            trades?: number;
+            successRate?: number;
+            balance?: number;
+          };
           updated_at?: string;
         };
       };
@@ -153,9 +195,22 @@ export interface Database {
           address: string;
           name: string;
           chain: string;
-          assets: any;
+          assets: Array<{
+            symbol: string;
+            name: string;
+            balance: number;
+            value: number;
+            price: number;
+            change24h: number;
+            chain: string;
+            color?: string;
+          }>;
           total_value: number;
-          performance: any;
+          performance: {
+            daily: number;
+            weekly: number;
+            monthly: number;
+          };
           created_at: string;
           updated_at: string;
         };
@@ -165,9 +220,22 @@ export interface Database {
           address: string;
           name: string;
           chain: string;
-          assets?: any;
+          assets?: Array<{
+            symbol: string;
+            name: string;
+            balance: number;
+            value: number;
+            price: number;
+            change24h: number;
+            chain: string;
+            color?: string;
+          }>;
           total_value?: number;
-          performance?: any;
+          performance?: {
+            daily: number;
+            weekly: number;
+            monthly: number;
+          };
           created_at?: string;
           updated_at?: string;
         };
@@ -177,9 +245,22 @@ export interface Database {
           address?: string;
           name?: string;
           chain?: string;
-          assets?: any;
+          assets?: Array<{
+            symbol?: string;
+            name?: string;
+            balance?: number;
+            value?: number;
+            price?: number;
+            change24h?: number;
+            chain?: string;
+            color?: string;
+          }>;
           total_value?: number;
-          performance?: any;
+          performance?: {
+            daily?: number;
+            weekly?: number;
+            monthly?: number;
+          };
           updated_at?: string;
         };
       };
@@ -190,7 +271,23 @@ export interface Database {
           type: string;
           status: string;
           description: string;
-          details: any;
+          details: {
+            fromToken?: string;
+            toToken?: string;
+            fromAmount?: number;
+            toAmount?: number;
+            fromChain?: string;
+            toChain?: string;
+            platform?: string;
+            botId?: string;
+            botName?: string;
+            txHash?: string;
+            gasUsed?: number;
+            gasFee?: number;
+            profit?: number;
+            profitPercentage?: number;
+            walletAddress?: string;
+          };
           created_at: string;
         };
         Insert: {
@@ -199,7 +296,23 @@ export interface Database {
           type: string;
           status: string;
           description: string;
-          details?: any;
+          details?: {
+            fromToken?: string;
+            toToken?: string;
+            fromAmount?: number;
+            toAmount?: number;
+            fromChain?: string;
+            toChain?: string;
+            platform?: string;
+            botId?: string;
+            botName?: string;
+            txHash?: string;
+            gasUsed?: number;
+            gasFee?: number;
+            profit?: number;
+            profitPercentage?: number;
+            walletAddress?: string;
+          };
           created_at?: string;
         };
         Update: {
@@ -208,40 +321,146 @@ export interface Database {
           type?: string;
           status?: string;
           description?: string;
-          details?: any;
+          details?: {
+            fromToken?: string;
+            toToken?: string;
+            fromAmount?: number;
+            toAmount?: number;
+            fromChain?: string;
+            toChain?: string;
+            platform?: string;
+            botId?: string;
+            botName?: string;
+            txHash?: string;
+            gasUsed?: number;
+            gasFee?: number;
+            profit?: number;
+            profitPercentage?: number;
+            walletAddress?: string;
+          };
         };
       };
       user_settings: {
         Row: {
           id: string;
           user_id: string;
-          profile: any;
-          trading: any;
-          notifications: any;
-          security: any;
-          appearance: any;
+          profile: {
+            displayName: string;
+            email: string;
+            timezone: string;
+            language: string;
+          };
+          trading: {
+            defaultSlippage: number;
+            maxGasPrice: number;
+            autoExecuteLimit: number;
+            riskTolerance: 'low' | 'medium' | 'high';
+            enableMEV: boolean;
+            preferredChains: string[];
+          };
+          notifications: {
+            email: boolean;
+            push: boolean;
+            sms: boolean;
+            opportunities: boolean;
+            botActions: boolean;
+            priceAlerts: boolean;
+            failedTrades: boolean;
+          };
+          security: {
+            twoFactorEnabled: boolean;
+            sessionTimeout: number;
+            apiKeysEnabled: boolean;
+            whitelistedIPs: string[];
+          };
+          appearance: {
+            theme: 'dark' | 'light' | 'auto';
+            currency: 'USD' | 'EUR' | 'GBP';
+            hideBalances: boolean;
+            compactMode: boolean;
+          };
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          profile?: any;
-          trading?: any;
-          notifications?: any;
-          security?: any;
-          appearance?: any;
+          profile?: {
+            displayName?: string;
+            email?: string;
+            timezone?: string;
+            language?: string;
+          };
+          trading?: {
+            defaultSlippage?: number;
+            maxGasPrice?: number;
+            autoExecuteLimit?: number;
+            riskTolerance?: 'low' | 'medium' | 'high';
+            enableMEV?: boolean;
+            preferredChains?: string[];
+          };
+          notifications?: {
+            email?: boolean;
+            push?: boolean;
+            sms?: boolean;
+            opportunities?: boolean;
+            botActions?: boolean;
+            priceAlerts?: boolean;
+            failedTrades?: boolean;
+          };
+          security?: {
+            twoFactorEnabled?: boolean;
+            sessionTimeout?: number;
+            apiKeysEnabled?: boolean;
+            whitelistedIPs?: string[];
+          };
+          appearance?: {
+            theme?: 'dark' | 'light' | 'auto';
+            currency?: 'USD' | 'EUR' | 'GBP';
+            hideBalances?: boolean;
+            compactMode?: boolean;
+          };
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          profile?: any;
-          trading?: any;
-          notifications?: any;
-          security?: any;
-          appearance?: any;
+          profile?: {
+            displayName?: string;
+            email?: string;
+            timezone?: string;
+            language?: string;
+          };
+          trading?: {
+            defaultSlippage?: number;
+            maxGasPrice?: number;
+            autoExecuteLimit?: number;
+            riskTolerance?: 'low' | 'medium' | 'high';
+            enableMEV?: boolean;
+            preferredChains?: string[];
+          };
+          notifications?: {
+            email?: boolean;
+            push?: boolean;
+            sms?: boolean;
+            opportunities?: boolean;
+            botActions?: boolean;
+            priceAlerts?: boolean;
+            failedTrades?: boolean;
+          };
+          security?: {
+            twoFactorEnabled?: boolean;
+            sessionTimeout?: number;
+            apiKeysEnabled?: boolean;
+            whitelistedIPs?: string[];
+          };
+          appearance?: {
+            theme?: 'dark' | 'light' | 'auto';
+            currency?: 'USD' | 'EUR' | 'GBP';
+            hideBalances?: boolean;
+            compactMode?: boolean;
+          };
           updated_at?: string;
         };
       };

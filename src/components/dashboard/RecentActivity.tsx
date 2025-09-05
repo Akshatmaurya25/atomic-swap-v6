@@ -118,7 +118,10 @@ export function RecentActivity({
         {displayedActivities.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No recent activity</p>
+            <p className="text-lg font-medium mb-2">No recent activity</p>
+            <p className="text-sm">
+              Your trading activity will appear here once you start creating bots and executing trades.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">

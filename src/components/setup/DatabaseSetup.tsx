@@ -96,7 +96,7 @@ ON CONFLICT DO NOTHING;`;
     try {
       await navigator.clipboard.writeText(text);
       setSuccess('📋 SQL copied to clipboard!');
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to copy to clipboard');
     }
   };
@@ -114,7 +114,7 @@ ON CONFLICT DO NOTHING;`;
           <>
             <div className="space-y-4">
               <p className="text-gray-300">
-                It looks like your database tables haven't been created yet. Let's set up your database:
+                It looks like your database tables haven&apos;t been created yet. Let&apos;s set up your database:
               </p>
               
               <div className="bg-gray-800 rounded-lg p-4 space-y-3">
@@ -176,7 +176,7 @@ ON CONFLICT DO NOTHING;`;
               <span className="font-semibold">Database Connection Successful!</span>
             </div>
             <p className="text-gray-300">
-              Now let's initialize your database with sample arbitrage opportunities:
+              Now let&apos;s initialize your database with sample arbitrage opportunities:
             </p>
             <Button 
               onClick={handleInitializeData}

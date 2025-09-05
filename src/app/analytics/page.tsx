@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { useToast } from '@/components/ui/Toast';
 import { 
   LineChart, 
   Line, 
@@ -24,12 +25,10 @@ import {
 } from 'recharts';
 import { 
   TrendingUp, 
-  TrendingDown, 
   DollarSign, 
   Activity,
   BarChart3,
   PieChart as PieChartIcon,
-  Calendar,
   Download
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -78,7 +77,15 @@ const pairPerformance = [
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
-  const [selectedMetric, setSelectedMetric] = useState('profit');
+  const { showDevelopmentToast } = useToast();
+
+  // Show development toast when page loads
+  useEffect(() => {
+    showDevelopmentToast(
+      '📊 Analytics Dashboard - In Development',
+      'Real-time Yellow Network analytics are coming soon! This preview shows sample arbitrage performance data across multiple chains.'
+    );
+  }, [showDevelopmentToast]);
 
   const timeRanges = [
     { value: '24h', label: '24 Hours' },
@@ -216,9 +223,9 @@ export default function AnalyticsPage() {
                         borderRadius: '6px',
                         color: '#F3F4F6'
                       }}
-                      formatter={(value, name) => [
-                        name === 'profit' ? formatCurrency(value as number) : value,
-                        name === 'profit' ? 'Profit' : 'Trades'
+                      formatter={(value) => [
+                        formatCurrency(value as number),
+                        'Profit'
                       ]}
                     />
                     <Legend />
@@ -258,9 +265,9 @@ export default function AnalyticsPage() {
                         borderRadius: '6px',
                         color: '#F3F4F6'
                       }}
-                      formatter={(value, name) => [
-                        name === 'profit' ? formatCurrency(value as number) : value,
-                        name === 'profit' ? 'Profit' : 'Trades'
+                      formatter={(value) => [
+                        formatCurrency(value as number),
+                        'Profit'
                       ]}
                     />
                     <Bar dataKey="profit" fill="#FFEB3B" name="Profit" />
@@ -302,7 +309,7 @@ export default function AnalyticsPage() {
                         borderRadius: '6px',
                         color: '#F3F4F6'
                       }}
-                      formatter={(value, name) => [`${value}%`, 'Share']}
+                      formatter={(value) => [`${value}%`, 'Share']}
                     />
                     <Legend />
                   </PieChart>
@@ -379,9 +386,9 @@ export default function AnalyticsPage() {
                       borderRadius: '6px',
                       color: '#F3F4F6'
                     }}
-                    formatter={(value, name) => [
-                      name === 'profit' ? formatCurrency(value as number) : value,
-                      name === 'profit' ? 'Profit' : 'Volume'
+                    formatter={(value) => [
+                      formatCurrency(value as number),
+                      'Value'
                     ]}
                   />
                   <Legend />

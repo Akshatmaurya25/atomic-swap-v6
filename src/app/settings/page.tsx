@@ -24,12 +24,10 @@ import {
   Plus,
   ExternalLink,
   AlertTriangle,
-  CheckCircle,
   Moon,
   Sun,
   Smartphone,
-  Mail,
-  Lock
+  Mail
 } from 'lucide-react';
 import { cn, truncateAddress } from '@/lib/utils';
 
@@ -128,7 +126,7 @@ export default function SettingsPage() {
   const updateSettings = <K extends keyof UserSettings>(
     section: K,
     key: keyof UserSettings[K],
-    value: any
+    value: unknown
   ) => {
     setSettings(prev => ({
       ...prev,
@@ -421,7 +419,7 @@ export default function SettingsPage() {
           </Badge>
         </div>
         <Button 
-          variant={settings.security.twoFactorEnabled ? "outline" : "default"}
+          variant={settings.security.twoFactorEnabled ? "outline" : "secondary"}
           size="sm"
           onClick={() => updateSettings('security', 'twoFactorEnabled', !settings.security.twoFactorEnabled)}
         >

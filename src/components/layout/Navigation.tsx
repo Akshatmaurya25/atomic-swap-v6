@@ -87,8 +87,10 @@ export function Navigation() {
 
           {/* Connect Wallet Button */}
           <div className="flex-shrink-0 px-4 py-4">
-            <div className="flex flex-col  justify-center">
-              <ConnectButton />
+            <div className="flex flex-col justify-center">
+              <div className="max-w-full overflow-hidden">
+                <ConnectButton />
+              </div>
             </div>
           </div>
         </div>
@@ -155,8 +157,10 @@ export function Navigation() {
                   })}
                 </nav>
               </div>
-              <div className="flex-shrink-0 flex flex-col  px-4 py-4">
-                <ConnectButton />
+              <div className="flex-shrink-0 flex flex-col px-4 py-4">
+                <div className="max-w-full overflow-hidden">
+                  <ConnectButton />
+                </div>
               </div>
             </div>
           </div>

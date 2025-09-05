@@ -36,12 +36,12 @@ export function useWebSocket() {
 
 // Hook for real-time opportunities
 export function useRealtimeOpportunities() {
-  const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [opportunities, setOpportunities] = useState<import('@/types').ArbitrageOpportunity[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
-    const handleOpportunityUpdate = (data: any[]) => {
-      setOpportunities(data);
+    const handleOpportunityUpdate = (data: unknown) => {
+      setOpportunities(data as import('@/types').ArbitrageOpportunity[]);
       setLastUpdate(new Date());
     };
 
@@ -62,11 +62,12 @@ export function useRealtimeOpportunities() {
 
 // Hook for real-time bot status updates
 export function useRealtimeBotStatus() {
-  const [botStatuses, setBotStatuses] = useState<Map<string, any>>(new Map());
+  const [botStatuses, setBotStatuses] = useState<Map<string, { status: 'active' | 'paused' | 'stopped'; lastUpdate: Date }>>(new Map());
 
   useEffect(() => {
-    const handleBotStatusUpdate = (data: { botId: string; status: any }) => {
-      setBotStatuses(prev => new Map(prev.set(data.botId, data.status)));
+    const handleBotStatusUpdate = (data: unknown) => {
+      const typedData = data as { botId: string; status: { status: 'active' | 'paused' | 'stopped'; lastUpdate: Date } };
+      setBotStatuses(prev => new Map(prev.set(typedData.botId, typedData.status)));
     };
 
     wsService.onBotStatusUpdate(handleBotStatusUpdate);
@@ -86,14 +87,15 @@ export function useRealtimeBotStatus() {
 
 // Hook for real-time price updates
 export function useRealtimePrices() {
-  const [prices, setPrices] = useState<Map<string, any>>(new Map());
+  const [prices, setPrices] = useState<Map<string, { price: number; change: number; timestamp: Date }>>(new Map());
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
-    const handlePriceUpdate = (data: { symbol: string; price: number; change: number }) => {
-      setPrices(prev => new Map(prev.set(data.symbol, {
-        price: data.price,
-        change: data.change,
+    const handlePriceUpdate = (data: unknown) => {
+      const typedData = data as { symbol: string; price: number; change: number };
+      setPrices(prev => new Map(prev.set(typedData.symbol, {
+        price: typedData.price,
+        change: typedData.change,
         timestamp: new Date(),
       })));
       setLastUpdate(new Date());
@@ -115,12 +117,29 @@ export function useRealtimePrices() {
 
 // Hook for trade execution notifications
 export function useTradeNotifications() {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Array<{
+    id: string;
+    type: string;
+    message: string;
+    timestamp: Date;
+    success?: boolean;
+    txHash?: string;
+    amount?: number;
+    token?: string;
+  }>>([]);
 
   useEffect(() => {
-    const handleTradeExecuted = (data: any) => {
+    const handleTradeExecuted = (data: unknown) => {
+      const typedData = data as {
+        type: string;
+        message: string;
+        success?: boolean;
+        txHash?: string;
+        amount?: number;
+        token?: string;
+      };
       setNotifications(prev => [...prev, {
-        ...data,
+        ...typedData,
         id: `${Date.now()}-${Math.random()}`,
         timestamp: new Date(),
       }]);

@@ -1,8 +1,7 @@
-import { supabase, Tables, Inserts, Updates } from '@/lib/supabase';
+import { supabase, Inserts, Updates } from '@/lib/supabase';
 import { 
   TradingBot, 
   ArbitrageOpportunity, 
-  WalletData, 
   ActivityItem, 
   UserSettings,
   ApiResponse 
@@ -10,24 +9,25 @@ import {
 
 class SupabaseService {
   // Helper method to format API responses
-  private formatResponse<T>(data: T | null, error: any = null): ApiResponse<T> {
+  private formatResponse<T>(data: T | null, error: unknown = null): ApiResponse<T> {
     if (error) {
       console.error('Supabase error:', error);
       
       // Handle specific error cases
       let errorMessage = 'Database operation failed';
       
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.code) {
-        errorMessage = `Database error (${error.code})`;
-      } else if (error.details) {
-        errorMessage = error.details;
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = (error as { message: string }).message;
+      } else if (error && typeof error === 'object' && 'code' in error) {
+        errorMessage = `Database error (${(error as { code: string }).code})`;
+      } else if (error && typeof error === 'object' && 'details' in error) {
+        errorMessage = (error as { details: string }).details;
       } else if (typeof error === 'string') {
         errorMessage = error;
-      } else if (Object.keys(error).length === 0) {
+      } else if (error && typeof error === 'object' && Object.keys(error).length === 0) {
         errorMessage = 'Database connection or table access error. Please check if tables exist.';
       }
+
 
       return {
         success: false,
@@ -71,7 +71,7 @@ class SupabaseService {
   async getBots(): Promise<ApiResponse<TradingBot[]>> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return this.formatResponse(null, { message: 'User not authenticated' });
+      return this.formatResponse([], { message: 'User not authenticated' });
     }
 
     const { data, error } = await supabase
@@ -106,10 +106,32 @@ class SupabaseService {
     return this.formatResponse(transformedBots, error);
   }
 
-  async createBot(botData: Partial<TradingBot>): Promise<ApiResponse<TradingBot>> {
+  async createBot(botData: Partial<TradingBot>): Promise<ApiResponse<TradingBot | null>> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return this.formatResponse(null, { message: 'User not authenticated' });
+      // Return a default TradingBot object with required fields
+      const defaultBot: TradingBot = {
+        id: '',
+        name: '',
+        strategy: 'arbitrage',
+        status: 'stopped',
+        pairs: [],
+        chains: [],
+        created: new Date(),
+        performance: {
+          totalProfit: 0,
+          profitPercentage: 0,
+          trades: 0,
+          successRate: 0,
+          balance: 0
+        },
+        settings: {
+          minProfitPercentage: 0,
+          maxInvestment: 0,
+          stopLoss: 0
+        }
+      };
+      return this.formatResponse(defaultBot, { message: 'User not authenticated' });
     }
 
     const insertData: Inserts<'trading_bots'> = {
@@ -119,8 +141,18 @@ class SupabaseService {
       status: botData.status || 'stopped',
       pairs: botData.pairs || [],
       chains: botData.chains || [],
-      settings: botData.settings || {},
-      performance: botData.performance || {}
+      settings: botData.settings || {
+        minProfitPercentage: 0.5,
+        maxInvestment: 1000,
+        stopLoss: -5.0
+      },
+      performance: botData.performance || {
+        totalProfit: 0,
+        profitPercentage: 0,
+        trades: 0,
+        successRate: 0,
+        balance: 1000
+      }
     };
 
     const { data, error } = await supabase
@@ -147,10 +179,31 @@ class SupabaseService {
     return this.formatResponse(null, error);
   }
 
-  async updateBot(botId: string, updates: Partial<TradingBot>): Promise<ApiResponse<TradingBot>> {
+  async updateBot(botId: string, updates: Partial<TradingBot>): Promise<ApiResponse<TradingBot | null>> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return this.formatResponse(null, { message: 'User not authenticated' });
+      const defaultBot: TradingBot = {
+        id: '',
+        name: '',
+        strategy: 'arbitrage',
+        status: 'stopped',
+        pairs: [],
+        chains: [],
+        created: new Date(),
+        performance: {
+          totalProfit: 0,
+          profitPercentage: 0,
+          trades: 0,
+          successRate: 0,
+          balance: 0
+        },
+        settings: {
+          minProfitPercentage: 0,
+          maxInvestment: 0,
+          stopLoss: 0
+        }
+      };
+      return this.formatResponse(defaultBot, { message: 'User not authenticated' });
     }
 
     const updateData: Updates<'trading_bots'> = {
@@ -193,7 +246,7 @@ class SupabaseService {
   async deleteBot(botId: string): Promise<ApiResponse<void>> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return this.formatResponse(null, { message: 'User not authenticated' });
+      return this.formatResponse(undefined, { message: 'User not authenticated' });
     }
 
     const { error } = await supabase
@@ -202,20 +255,23 @@ class SupabaseService {
       .eq('id', botId)
       .eq('user_id', user.user.id);
 
-    return this.formatResponse({}, error);
+    return this.formatResponse(undefined, error);
   }
 
   // Bot actions
   async startBot(botId: string): Promise<ApiResponse<void>> {
-    return this.updateBot(botId, { status: 'active' });
+    const result = await this.updateBot(botId, { status: 'active' });
+    return result.success ? this.formatResponse(undefined, null) : this.formatResponse(undefined, result.error);
   }
 
   async pauseBot(botId: string): Promise<ApiResponse<void>> {
-    return this.updateBot(botId, { status: 'paused' });
+    const result = await this.updateBot(botId, { status: 'paused' });
+    return result.success ? this.formatResponse(undefined, null) : this.formatResponse(undefined, result.error);
   }
 
   async stopBot(botId: string): Promise<ApiResponse<void>> {
-    return this.updateBot(botId, { status: 'stopped' });
+    const result = await this.updateBot(botId, { status: 'stopped' });
+    return result.success ? this.formatResponse(undefined, null) : this.formatResponse(undefined, result.error);
   }
 
   // Opportunities CRUD
@@ -253,7 +309,7 @@ class SupabaseService {
       lastUpdated: new Date(opp.updated_at),
       trending: opp.trending,
       executable: opp.executable,
-      favorite: userId ? opp.user_favorites.some((fav: any) => fav.user_id === userId) : false
+      favorite: userId ? opp.user_favorites.some((fav: { user_id: string }) => fav.user_id === userId) : false
     }));
 
     return this.formatResponse(transformedOpportunities, error);
@@ -262,7 +318,7 @@ class SupabaseService {
   async toggleFavoriteOpportunity(opportunityId: string): Promise<ApiResponse<void>> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return this.formatResponse(null, { message: 'User not authenticated' });
+      return this.formatResponse(undefined, { message: 'User not authenticated' });
     }
 
     // Check if already favorited
@@ -280,7 +336,7 @@ class SupabaseService {
         .delete()
         .eq('user_id', user.user.id)
         .eq('opportunity_id', opportunityId);
-      return this.formatResponse({}, error);
+  return this.formatResponse(undefined, error);
     } else {
       // Add favorite
       const { error } = await supabase
@@ -289,7 +345,7 @@ class SupabaseService {
           user_id: user.user.id,
           opportunity_id: opportunityId
         });
-      return this.formatResponse({}, error);
+  return this.formatResponse(undefined, error);
     }
   }
 
@@ -302,7 +358,8 @@ class SupabaseService {
   }): Promise<ApiResponse<ActivityItem[]>> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return this.formatResponse(null, { message: 'User not authenticated' });
+      // Return empty array for activities
+      return this.formatResponse([], { message: 'User not authenticated' });
     }
 
     let query = supabase
@@ -328,8 +385,8 @@ class SupabaseService {
 
     const transformedActivities: ActivityItem[] = (data || []).map(activity => ({
       id: activity.id,
-      type: activity.type as any,
-      status: activity.status as any,
+      type: activity.type as import('@/types').ActivityType,
+      status: activity.status as import('@/types').ActivityStatus,
       timestamp: new Date(activity.created_at),
       description: activity.description,
       details: activity.details || {}
@@ -341,7 +398,16 @@ class SupabaseService {
   async createActivity(activity: Omit<ActivityItem, 'id' | 'timestamp'>): Promise<ApiResponse<ActivityItem>> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return this.formatResponse(null, { message: 'User not authenticated' });
+      // Return a default ActivityItem object
+      const defaultActivity: ActivityItem = {
+        id: '',
+        type: 'arbitrage',
+        status: 'pending',
+        timestamp: new Date(),
+        description: '',
+        details: {}
+      };
+      return this.formatResponse(defaultActivity, { message: 'User not authenticated' });
     }
 
     const { data, error } = await supabase
@@ -368,14 +434,60 @@ class SupabaseService {
       return this.formatResponse(transformedActivity, error);
     }
 
-    return this.formatResponse(null, error);
+    const defaultActivity: ActivityItem = {
+      id: '',
+      type: 'arbitrage',
+      status: 'pending',
+      timestamp: new Date(),
+      description: '',
+      details: {}
+    };
+    return this.formatResponse(defaultActivity, error);
   }
 
   // User Settings
   async getSettings(): Promise<ApiResponse<UserSettings>> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return this.formatResponse(null, { message: 'User not authenticated' });
+      // Return default settings for unauthenticated user
+      const defaultSettings: UserSettings = {
+        profile: {
+          displayName: 'User',
+          email: '',
+          timezone: 'UTC',
+          language: 'en'
+        },
+        trading: {
+          defaultSlippage: 1.0,
+          maxGasPrice: 50,
+          autoExecuteLimit: 1000,
+          riskTolerance: 'medium',
+          enableMEV: false,
+          preferredChains: ['Ethereum', 'Polygon', 'Arbitrum']
+        },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          opportunities: true,
+          botActions: true,
+          priceAlerts: false,
+          failedTrades: true
+        },
+        security: {
+          twoFactorEnabled: false,
+          sessionTimeout: 24,
+          apiKeysEnabled: false,
+          whitelistedIPs: []
+        },
+        appearance: {
+          theme: 'dark',
+          currency: 'USD',
+          hideBalances: false,
+          compactMode: false
+        }
+      };
+      return this.formatResponse(defaultSettings, { message: 'User not authenticated' });
     }
 
     const { data, error } = await supabase
@@ -440,7 +552,45 @@ class SupabaseService {
   async updateSettings(settings: Partial<UserSettings>): Promise<ApiResponse<UserSettings>> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return this.formatResponse(null, { message: 'User not authenticated' });
+      // Return default settings for unauthenticated user
+      const defaultSettings: UserSettings = {
+        profile: {
+          displayName: 'User',
+          email: '',
+          timezone: 'UTC',
+          language: 'en'
+        },
+        trading: {
+          defaultSlippage: 1.0,
+          maxGasPrice: 50,
+          autoExecuteLimit: 1000,
+          riskTolerance: 'medium',
+          enableMEV: false,
+          preferredChains: ['Ethereum', 'Polygon', 'Arbitrum']
+        },
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          opportunities: true,
+          botActions: true,
+          priceAlerts: false,
+          failedTrades: true
+        },
+        security: {
+          twoFactorEnabled: false,
+          sessionTimeout: 24,
+          apiKeysEnabled: false,
+          whitelistedIPs: []
+        },
+        appearance: {
+          theme: 'dark',
+          currency: 'USD',
+          hideBalances: false,
+          compactMode: false
+        }
+      };
+      return this.formatResponse(defaultSettings, { message: 'User not authenticated' });
     }
 
     const updateData: Updates<'user_settings'> = {
@@ -474,7 +624,44 @@ class SupabaseService {
       return this.formatResponse(updatedSettings, error);
     }
 
-    return this.formatResponse(null, error);
+    const defaultSettings: UserSettings = {
+      profile: {
+        displayName: 'User',
+        email: '',
+        timezone: 'UTC',
+        language: 'en'
+      },
+      trading: {
+        defaultSlippage: 1.0,
+        maxGasPrice: 50,
+        autoExecuteLimit: 1000,
+        riskTolerance: 'medium',
+        enableMEV: false,
+        preferredChains: ['Ethereum', 'Polygon', 'Arbitrum']
+      },
+      notifications: {
+        email: true,
+        push: true,
+        sms: false,
+        opportunities: true,
+        botActions: true,
+        priceAlerts: false,
+        failedTrades: true
+      },
+      security: {
+        twoFactorEnabled: false,
+        sessionTimeout: 24,
+        apiKeysEnabled: false,
+        whitelistedIPs: []
+      },
+      appearance: {
+        theme: 'dark',
+        currency: 'USD',
+        hideBalances: false,
+        compactMode: false
+      }
+    };
+    return this.formatResponse(defaultSettings, error);
   }
 
   // Real-time subscriptions

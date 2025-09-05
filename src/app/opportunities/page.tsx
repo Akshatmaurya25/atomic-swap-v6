@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { useToast } from '@/components/ui/Toast';
 import { ArbitrageOpportunity } from '@/components/dashboard/ArbitrageOpportunity';
 import { 
   Search,
@@ -16,7 +17,6 @@ import {
   Clock,
   DollarSign,
   Zap,
-  Settings,
   Star,
   StarOff,
   Play,
@@ -166,6 +166,15 @@ export default function OpportunitiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const { showDevelopmentToast } = useToast();
+
+  // Show development toast when page loads
+  useEffect(() => {
+    showDevelopmentToast(
+      '🔍 Arbitrage Opportunities - In Development',
+      'Live Yellow Network arbitrage scanning is coming soon! This preview shows cross-chain opportunities with real market data simulation.'
+    );
+  }, [showDevelopmentToast]);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'profit' | 'percentage' | 'time' | 'liquidity'>('profit');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -181,9 +190,21 @@ export default function OpportunitiesPage() {
     maxTimeWindow: 600
   });
 
-  const availableChains = ['Ethereum', 'Polygon', 'Arbitrum', 'BSC', 'Optimism', 'Base'];
-  const availablePairs = ['ETH/USDC', 'BTC/USDT', 'USDT/USDC', 'MATIC/USDC', 'ARB/USDC'];
-  const riskLevels = ['low', 'medium', 'high'];
+  const refreshOpportunities = useCallback(() => {
+    setIsScanning(true);
+    // Simulate API call
+    setTimeout(() => {
+      const updated = opportunities.map(opp => ({
+        ...opp,
+        lastUpdated: new Date(),
+        // Simulate small price changes
+        sourcePrice: opp.sourcePrice * (1 + (Math.random() - 0.5) * 0.001),
+        targetPrice: opp.targetPrice * (1 + (Math.random() - 0.5) * 0.001),
+      }));
+      setOpportunities(updated);
+      setIsScanning(false);
+    }, 1500);
+  }, [opportunities]);
 
   useEffect(() => {
     // Initialize with mock data
@@ -201,11 +222,11 @@ export default function OpportunitiesPage() {
 
       return () => clearInterval(interval);
     }
-  }, [autoRefresh]);
+  }, [autoRefresh, refreshOpportunities]);
 
   useEffect(() => {
     // Apply filters and search
-    let filtered = opportunities.filter(opp => {
+    const filtered = opportunities.filter(opp => {
       const matchesSearch = opp.tokenPair.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            opp.sourceChain.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            opp.targetChain.toLowerCase().includes(searchTerm.toLowerCase());
@@ -252,22 +273,6 @@ export default function OpportunitiesPage() {
 
     setFilteredOpportunities(filtered);
   }, [opportunities, searchTerm, filters, sortBy, sortOrder]);
-
-  const refreshOpportunities = () => {
-    setIsScanning(true);
-    // Simulate API call
-    setTimeout(() => {
-      const updated = opportunities.map(opp => ({
-        ...opp,
-        lastUpdated: new Date(),
-        // Simulate small price changes
-        sourcePrice: opp.sourcePrice * (1 + (Math.random() - 0.5) * 0.001),
-        targetPrice: opp.targetPrice * (1 + (Math.random() - 0.5) * 0.001),
-      }));
-      setOpportunities(updated);
-      setIsScanning(false);
-    }, 1500);
-  };
 
   const handleExecuteOpportunity = (opportunityId: string) => {
     console.log('Executing opportunity:', opportunityId);
@@ -403,7 +408,7 @@ export default function OpportunitiesPage() {
               </div>
               <div className="flex items-center space-x-2">
                 <Button
-                  variant={showFilters ? "default" : "outline"}
+                  variant={showFilters ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => setShowFilters(!showFilters)}
                 >
@@ -414,8 +419,8 @@ export default function OpportunitiesPage() {
                   value={`${sortBy}-${sortOrder}`}
                   onChange={(e) => {
                     const [sort, order] = e.target.value.split('-');
-                    setSortBy(sort as any);
-                    setSortOrder(order as any);
+                    setSortBy(sort as 'profit' | 'percentage' | 'time' | 'liquidity');
+                    setSortOrder(order as 'asc' | 'desc');
                   }}
                   className="bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-md text-sm"
                 >

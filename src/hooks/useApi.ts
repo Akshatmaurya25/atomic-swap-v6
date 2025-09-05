@@ -5,7 +5,7 @@ import { ApiResponse } from '@/types';
 // Generic hook for API calls
 export function useApi<T>(
   apiCall: () => Promise<ApiResponse<T>>,
-  dependencies: any[] = []
+  dependencies: unknown[] = []
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ export function useApi<T>(
     } finally {
       setLoading(false);
     }
-  }, dependencies);
+  }, [apiCall, ...dependencies]);
 
   useEffect(() => {
     fetchData();
@@ -127,8 +127,8 @@ export function useAnalytics(timeRange: string = '7d') {
 export function useBotOperations() {
   const { execute, loading, error } = useAsyncOperation();
 
-  const createBot = (botData: any) => execute(() => apiService.createBot(botData));
-  const updateBot = (botId: string, updates: any) => execute(() => apiService.updateBot(botId, updates));
+  const createBot = (botData: Partial<import('@/types').TradingBot>) => execute(() => apiService.createBot(botData));
+  const updateBot = (botId: string, updates: Partial<import('@/types').TradingBot>) => execute(() => apiService.updateBot(botId, updates));
   const deleteBot = (botId: string) => execute(() => apiService.deleteBot(botId));
   const startBot = (botId: string) => execute(() => apiService.startBot(botId));
   const pauseBot = (botId: string) => execute(() => apiService.pauseBot(botId));
@@ -168,7 +168,7 @@ export function useOpportunityOperations() {
 export function useSettingsOperations() {
   const { execute, loading, error } = useAsyncOperation();
 
-  const updateSettings = (settings: any) => execute(() => apiService.updateSettings(settings));
+  const updateSettings = (settings: Partial<import('@/types').UserSettings>) => execute(() => apiService.updateSettings(settings));
   const resetSettings = () => execute(() => apiService.resetSettings());
 
   return {
@@ -183,7 +183,7 @@ export function useSettingsOperations() {
 export function usePortfolioOperations() {
   const { execute, loading, error } = useAsyncOperation();
 
-  const addWallet = (walletData: any) => execute(() => apiService.addWallet(walletData));
+  const addWallet = (walletData: Partial<import('@/types').WalletData>) => execute(() => apiService.addWallet(walletData));
   const removeWallet = (walletAddress: string) => execute(() => apiService.removeWallet(walletAddress));
   const refreshWallet = (walletAddress: string) => execute(() => apiService.refreshWallet(walletAddress));
 

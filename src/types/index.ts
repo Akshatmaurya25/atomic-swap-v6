@@ -187,7 +187,7 @@ export interface StrategyBreakdown {
 // WebSocket Types
 export interface WebSocketMessage {
   type: 'opportunity_update' | 'price_update' | 'bot_status' | 'trade_executed';
-  data: any;
+  data: unknown;
   timestamp: number;
 }
 
@@ -195,5 +195,5 @@ export interface WebSocketMessage {
 export interface ApiError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }

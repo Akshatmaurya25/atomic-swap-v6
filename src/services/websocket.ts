@@ -1,6 +1,6 @@
 import { WebSocketMessage } from '@/types';
 
-type WebSocketEventHandler = (data: any) => void;
+type WebSocketEventHandler = (data: unknown) => void;
 
 class WebSocketService {
   private ws: WebSocket | null = null;
@@ -103,7 +103,7 @@ class WebSocketService {
     }
   }
 
-  private emit(event: string, data: any) {
+  private emit(event: string, data: unknown) {
     const handlers = this.eventHandlers.get(event);
     if (handlers) {
       handlers.forEach(handler => handler(data));
@@ -111,27 +111,27 @@ class WebSocketService {
   }
 
   // Specific event subscription helpers
-  onOpportunityUpdate(handler: (opportunities: any[]) => void) {
-    this.on('opportunity_update', handler);
+  onOpportunityUpdate(handler: (opportunities: import('@/types').ArbitrageOpportunity[]) => void) {
+    this.on('opportunity_update', (data) => handler(data as import('@/types').ArbitrageOpportunity[]));
   }
 
-  onPriceUpdate(handler: (priceData: any) => void) {
-    this.on('price_update', handler);
+  onPriceUpdate(handler: (priceData: { symbol: string; price: number; change: number; timestamp: number }) => void) {
+    this.on('price_update', (data) => handler(data as { symbol: string; price: number; change: number; timestamp: number }));
   }
 
-  onBotStatusUpdate(handler: (botStatus: any) => void) {
-    this.on('bot_status', handler);
+  onBotStatusUpdate(handler: (botStatus: { botId: string; status: 'active' | 'paused' | 'stopped'; timestamp: number }) => void) {
+    this.on('bot_status', (data) => handler(data as { botId: string; status: 'active' | 'paused' | 'stopped'; timestamp: number }));
   }
 
-  onTradeExecuted(handler: (tradeData: any) => void) {
-    this.on('trade_executed', handler);
+  onTradeExecuted(handler: (tradeData: { type: string; message: string; success: boolean; txHash?: string; amount?: number; token?: string; timestamp: number }) => void) {
+    this.on('trade_executed', (data) => handler(data as { type: string; message: string; success: boolean; txHash?: string; amount?: number; token?: string; timestamp: number }));
   }
 
   // Send messages (if needed for bidirectional communication)
-  send(type: string, data: any) {
+  send(type: string, data: unknown) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       const message: WebSocketMessage = {
-        type: type as any,
+        type: type as import('@/types').WebSocketMessage['type'],
         data,
         timestamp: Date.now()
       };

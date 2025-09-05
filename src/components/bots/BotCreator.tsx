@@ -4,15 +4,17 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
 import { 
   TrendingUp, 
   DollarSign, 
   Zap,
-  Plus,
   X,
-  Info
+  Loader2,
+  CheckCircle,
+  Coins
 } from 'lucide-react';
+import { tokenAllocationService } from '@/services/tokenAllocation';
+import { useAccount } from 'wagmi';
 
 interface BotStrategy {
   id: string;
@@ -61,12 +63,40 @@ const availablePairs = [
 
 interface BotCreatorProps {
   onClose?: () => void;
-  onSubmit?: (botConfig: any) => void;
+  onSubmit?: (botConfig: {
+    strategy: string;
+    name: string;
+    selectedPairs: string[];
+    selectedChains: string[];
+    settings: {
+      minProfitPercentage: number;
+      maxInvestment: number;
+      stopLoss: number;
+      slippage: number;
+      gasLimit: 'auto' | 'manual';
+      customGasLimit: number;
+      tradingFunds: number;
+    };
+    tokenAllocation?: unknown;
+    created: Date;
+  }) => Promise<void>;
 }
 
 export function BotCreator({ onClose, onSubmit }: BotCreatorProps) {
+  const { address } = useAccount();
   const [step, setStep] = useState(1);
   const [selectedStrategy, setSelectedStrategy] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [tokenAllocation, setTokenAllocation] = useState<{
+    success: boolean;
+    message?: string;
+    data?: {
+      transactionHash: string;
+      allocatedAmount: string;
+      recipientAddress: string;
+    };
+  } | null>(null);
   const [config, setConfig] = useState({
     name: '',
     selectedPairs: [] as string[],
@@ -77,7 +107,8 @@ export function BotCreator({ onClose, onSubmit }: BotCreatorProps) {
       stopLoss: -5.0,
       slippage: 1.0,
       gasLimit: 'auto' as 'auto' | 'manual',
-      customGasLimit: 300000
+      customGasLimit: 300000,
+      tradingFunds: 2.0 // ETH amount to allocate for trading
     }
   });
 
@@ -104,16 +135,46 @@ export function BotCreator({ onClose, onSubmit }: BotCreatorProps) {
     }));
   };
 
-  const handleSubmit = () => {
-    if (onSubmit) {
-      onSubmit({
+  const handleSubmit = async () => {
+    if (!onSubmit || !address) return;
+    
+    setIsSubmitting(true);
+    try {
+      // First allocate tokens for the bot
+      const allocationResult = await tokenAllocationService.allocateTestTokens({
+        userAddress: address,
+        botName: config.name,
+        strategy: selectedStrategy,
+        requestedAmount: config.settings.tradingFunds,
+        chains: config.selectedChains
+      });
+
+      if (!allocationResult.success) {
+        throw new Error(allocationResult.error || 'Token allocation failed');
+      }
+
+      setTokenAllocation(allocationResult);
+
+      // Then create the bot with allocation info
+      await onSubmit({
         strategy: selectedStrategy,
         ...config,
+        tokenAllocation: allocationResult,
         created: new Date()
       });
-    }
-    if (onClose) {
-      onClose();
+      
+      // Show success state briefly before closing
+      setSubmitSuccess(true);
+      setTimeout(() => {
+        if (onClose) {
+          onClose();
+        }
+      }, 2000); // Longer delay to show allocation success
+    } catch (error) {
+      console.error('Failed to create bot:', error);
+      alert(`Failed to create bot: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -165,7 +226,12 @@ export function BotCreator({ onClose, onSubmit }: BotCreatorProps) {
           {/* Step 1: Strategy Selection */}
           {step === 1 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white">Choose Trading Strategy</h3>
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold text-white">Choose Trading Strategy</h3>
+                <p className="text-sm text-gray-400 mt-2">
+                  Select the automated trading strategy that best fits your goals
+                </p>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {strategies.map((strategy) => {
                   const Icon = strategy.icon;
@@ -209,7 +275,12 @@ export function BotCreator({ onClose, onSubmit }: BotCreatorProps) {
           {/* Step 2: Configuration */}
           {step === 2 && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white">Configure Your Bot</h3>
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold text-white">Configure Your Bot</h3>
+                <p className="text-sm text-gray-400 mt-2">
+                  Set up trading parameters and select supported pairs and chains
+                </p>
+              </div>
               
               {/* Bot Name */}
               <div className="space-y-2">
@@ -268,7 +339,7 @@ export function BotCreator({ onClose, onSubmit }: BotCreatorProps) {
                 </Button>
                 <Button 
                   onClick={() => setStep(3)}
-                  disabled={!config.name || config.selectedPairs.length === 0 || config.selectedChains.length === 0}
+                  disabled={!config.name || config.selectedPairs.length === 0 || config.selectedChains.length === 0 || isSubmitting}
                 >
                   Next
                 </Button>
@@ -279,7 +350,12 @@ export function BotCreator({ onClose, onSubmit }: BotCreatorProps) {
           {/* Step 3: Advanced Settings */}
           {step === 3 && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white">Advanced Settings</h3>
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold text-white">Advanced Settings</h3>
+                <p className="text-sm text-gray-400 mt-2">
+                  Fine-tune your bot&apos;s trading parameters and risk management
+                </p>
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -297,6 +373,27 @@ export function BotCreator({ onClose, onSubmit }: BotCreatorProps) {
                       }))}
                       placeholder="0.5"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">
+                      Trading Funds (ETH)
+                    </label>
+                    <Input 
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      max="5"
+                      value={config.settings.tradingFunds}
+                      onChange={(e) => setConfig(prev => ({
+                        ...prev,
+                        settings: { ...prev.settings, tradingFunds: parseFloat(e.target.value) || 0.1 }
+                      }))}
+                      placeholder="2.0"
+                    />
+                    <p className="text-xs text-gray-400">
+                      Amount of Sepolia ETH to allocate for bot trading (max 5 ETH)
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -415,18 +512,45 @@ export function BotCreator({ onClose, onSubmit }: BotCreatorProps) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Min Profit:</span>
-                    <span className="text-white">{config.settings.minProfitPercentage}%</span>
+                    <span className="text-white">{config.settings.minProfitPercentage.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Trading Funds:</span>
+                    <span className="text-white">{config.settings.tradingFunds} ETH</span>
                   </div>
                 </div>
               </div>
 
               {/* Navigation */}
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(2)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep(2)}
+                  disabled={isSubmitting}
+                >
                   Back
                 </Button>
-                <Button onClick={handleSubmit}>
-                  Create Bot
+                <Button 
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || !config.name || !address}
+                  className={submitSuccess ? 'bg-green-500 hover:bg-green-600' : ''}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {tokenAllocation ? 'Creating Bot...' : 'Allocating Tokens...'}
+                    </>
+                  ) : submitSuccess ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Bot Created!
+                    </>
+                  ) : (
+                    <>
+                      <Coins className="w-4 h-4 mr-2" />
+                      Create Bot & Allocate Funds
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

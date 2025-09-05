@@ -30,7 +30,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         : await signUp(email, password);
 
       if (result.error) {
-        setError(result.error.message || 'Authentication failed');
+        setError(String(result.error) || 'Authentication failed');
       } else {
         if (mode === 'signup') {
           setError('Please check your email for a confirmation link');

@@ -6,6 +6,7 @@ import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { config } from '@/config/wagmi';
 import { AuthProvider } from './AuthProvider';
+import { AppProvider } from './AppProvider';
 import { ReactNode } from 'react';
 
 const queryClient = new QueryClient();
@@ -31,7 +32,9 @@ export function Web3Provider({ children }: Web3ProviderProps) {
               learnMoreUrl: 'https://yellownetwork.io',
             }}
           >
-            {children}
+            <AppProvider>
+              {children}
+            </AppProvider>
           </RainbowKitProvider>
         </AuthProvider>
       </QueryClientProvider>

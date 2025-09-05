@@ -59,7 +59,7 @@ export function usePriceFeed() {
         stop();
       }
     };
-  }, []);
+  }, [isRunning, start, stop]);
 
   return {
     isRunning,

@@ -169,8 +169,22 @@ class ApiService {
     return this.request<StrategyBreakdown[]>('/analytics/strategies');
   }
 
-  async getPortfolioMetrics(): Promise<ApiResponse<any>> {
-    return this.request<any>('/analytics/portfolio');
+  async getPortfolioMetrics(): Promise<ApiResponse<{
+    totalValue: number;
+    dailyChange: number;
+    weeklyChange: number;
+    monthlyChange: number;
+    allocation: Array<{ name: string; value: number; percentage: number }>;
+    topPerformers: Array<{ symbol: string; change: number; value: number }>;
+  }>> {
+    return this.request<{
+      totalValue: number;
+      dailyChange: number;
+      weeklyChange: number;
+      monthlyChange: number;
+      allocation: Array<{ name: string; value: number; percentage: number }>;
+      topPerformers: Array<{ symbol: string; change: number; value: number }>;
+    }>('/analytics/portfolio');
   }
 
   // Settings API

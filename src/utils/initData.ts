@@ -93,7 +93,7 @@ export async function testConnection() {
   try {
     console.log('🔍 Testing Supabase connection...');
     // Simple test by trying to query opportunities table
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('opportunities')
       .select('count', { count: 'exact', head: true });
     
@@ -155,116 +155,12 @@ export async function initializeSampleData() {
   }
 }
 
-export async function createSampleDataForUser(userId: string) {
+export async function createDefaultUserSettings(userId: string) {
   try {
-    console.log('👤 Creating sample data for user:', userId);
+    console.log('👤 Creating default settings for user:', userId);
 
-    // Sample bots for the user
-    const sampleBots = [
-      {
-        user_id: userId,
-        name: 'ETH/USDC Arbitrage Master',
-        strategy: 'arbitrage' as const,
-        status: 'stopped' as const,
-        pairs: ['ETH/USDC'],
-        chains: ['Ethereum', 'Polygon', 'Arbitrum'],
-        settings: {
-          minProfitPercentage: 0.3,
-          maxInvestment: 5000,
-          stopLoss: -2.5,
-          slippage: 1.0,
-          gasLimit: 'auto'
-        },
-        performance: {
-          totalProfit: 2847.50,
-          profitPercentage: 15.2,
-          trades: 127,
-          successRate: 94.5,
-          balance: 18750.00
-        }
-      },
-      {
-        user_id: userId,
-        name: 'Stablecoin Spread Hunter',
-        strategy: 'arbitrage' as const,
-        status: 'stopped' as const,
-        pairs: ['USDT/USDC', 'USDC/DAI'],
-        chains: ['BSC', 'Polygon'],
-        settings: {
-          minProfitPercentage: 0.1,
-          maxInvestment: 2000,
-          stopLoss: -1.0,
-          slippage: 0.5,
-          gasLimit: 'auto'
-        },
-        performance: {
-          totalProfit: 892.30,
-          profitPercentage: 8.9,
-          trades: 234,
-          successRate: 98.1,
-          balance: 10034.20
-        }
-      }
-    ];
-
-    // Insert sample bots
-    const { data: botData, error: botError } = await supabase
-      .from('trading_bots')
-      .insert(sampleBots)
-      .select();
-
-    if (botError) {
-      console.error('Error creating sample bots:', botError);
-      throw botError;
-    }
-
-    // Sample activities
-    const sampleActivities = [
-      {
-        user_id: userId,
-        type: 'arbitrage',
-        status: 'completed',
-        description: 'ETH/USDC arbitrage executed successfully',
-        details: {
-          fromToken: 'ETH',
-          toToken: 'USDC',
-          fromAmount: 5.0,
-          toAmount: 13250.00,
-          fromChain: 'Ethereum',
-          toChain: 'Polygon',
-          platform: 'Uniswap V3 → QuickSwap',
-          txHash: '0x1234567890abcdef1234567890abcdef12345678',
-          gasUsed: 180000,
-          gasFee: 45.30,
-          profit: 127.50,
-          profitPercentage: 0.96
-        }
-      },
-      {
-        user_id: userId,
-        type: 'bot_action',
-        status: 'completed',
-        description: 'ETH/USDC Arbitrage Master bot started',
-        details: {
-          botId: botData?.[0]?.id || '1',
-          botName: 'ETH/USDC Arbitrage Master',
-          walletAddress: '0x1234567890123456789012345678901234567890'
-        }
-      }
-    ];
-
-    // Insert sample activities
-    const { error: activityError } = await supabase
-      .from('activities')
-      .insert(sampleActivities);
-
-    if (activityError) {
-      console.error('Error creating sample activities:', activityError);
-      throw activityError;
-    }
-
-    // Sample user settings
-    const sampleSettings = {
+    // Default user settings only - no sample data
+    const defaultSettings = {
       user_id: userId,
       profile: {
         displayName: 'Yellow Trader',
@@ -302,20 +198,20 @@ export async function createSampleDataForUser(userId: string) {
       }
     };
 
-    // Insert sample settings
+    // Insert default settings
     const { error: settingsError } = await supabase
       .from('user_settings')
-      .upsert(sampleSettings);
+      .upsert(defaultSettings);
 
     if (settingsError) {
-      console.error('Error creating sample settings:', settingsError);
+      console.error('Error creating default settings:', settingsError);
       throw settingsError;
     }
 
-    console.log('✅ Sample user data created successfully');
+    console.log('✅ Default user settings created successfully');
     return true;
   } catch (error) {
-    console.error('❌ Failed to create sample user data:', error);
+    console.error('❌ Failed to create default user settings:', error);
     return false;
   }
 }
